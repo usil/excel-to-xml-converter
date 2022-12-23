@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Electron App</title>
+    <link rel="stylesheet" href="./bootstrap.min.css">
+    <link rel="stylesheet" href="custom.css">
+  </head>
+  <body class="body">
+
+
+    <div class="container-fluid p-4 container">
+      <h1>Import Excel to XML - USIL</h1>
+      <br>
+      <br>
+
+      <form 
+        action="#"
+        onsubmit="process(this); return false"
+        class="form"
+      >
+        <div class="form-box">
+          <div>
+            <label for="">Source File</label>
+            <input type="file" id="sourceFile" name="sourceFile">
+          </div>
+          <div>
+            <label for="">Destino File</label>
+            <input type="file" id="destinationFile" name="destinationFile">
+          </div>
+        </div>
+        <div class="form-box">
+          <div>
+            <label for="">Tempalte Item File XML</label>
+            <input type="file" id="templateItemFile" name="templateItemFile">
+          </div>
+          <div>
+            <label for="">Template Massive File XML</label>
+            <input type="file" id="templateMassiveFile" name="templateMassiveFile">
+          </div>
+        </div>
+        <button class="form-button-submit" type="submit">Procesar</button>
+        <button class="form-button-refresh" type="button" onclick="window.location.reload()">Refrescar App</button>
+
+      </form>
+      <label id="stateProccess"></label>
+    </div>
+
+    <!-- Logic -->
+    <script>
+      const { ipcRenderer } = require('electron');
+      const fs = require("fs");
+      const readXlsxFile = require("read-excel-file/node");
+      const { readExcel, readXmlItemFile, writeFile } = require("../helpers/file");
+      const { validateArrItemIntoObj } = require("../helpers/validations");
+
+      async function process(data) {
+        let stateProccess = document.getElementById("stateProccess");
+        try {
+          let sourceFile = document.getElementById("sourceFile").files[0].path;
+          let destinationFile = document.getElementById("destinationFile").files[0].path;
+          let templateItemFile = document.getElementById("templateItemFile").files[0].path;
+          let templateMassiveFile = document.getElementById("templateMassiveFile").files[0].path;
+          console.log(sourceFile, templateMassiveFile )
+          let answers = {};
+          answers["sourceFile"] = sourceFile;
+          answers["destinationFile"] = destinationFile;
+          answers[
+            "templateItemFile"
+          ] = templateItemFile;
+          answers["templateMassiveFile"] = templateMassiveFile;
+          const { templateItemKeys, templateItemString } = await readXmlItemFile(
+            answers.templateItemFile
+          );
+          const { templateItemString: templateMassiveString } = await readXmlItemFile(
+            answers.templateMassiveFile
+          );
+          const { headerRow, allRows } = await readExcel(answers.sourceFile);
+          const isValidate = validateArrItemIntoObj(headerRow, templateItemKeys);
+            if (!isValidate)
+              throw new Error("There isn't a excel column or xml variable");
+            let finalXmlWithExcelValueItem = templateItemString;
+            let finalXmlMassiveString = templateMassiveString;
+            let finalObjWithExcelValue = templateItemKeys;
+            let finalMassiveXml = [];
+            for (let i = 1; i < allRows.length; i++) {
+              const excelRow = allRows[i];
+              for (let j = 0; j < excelRow.length; j++) {
+                let headValue = headerRow[j];
+                const excelValue = excelRow[j];
+                finalObjWithExcelValue[headValue] = excelValue;
+                if (excelValue == null) {
+                  console.warn(
+                    "There is a null in row " + i + " in column " + (j + 1),
+                    "-----"
+                  );
+                }
+                finalXmlWithExcelValueItem = finalXmlWithExcelValueItem.replace(
+                  "@" + headValue,
+                  excelValue
+                );
+              }
+              finalMassiveXml.push(finalXmlWithExcelValueItem);
+              finalXmlWithExcelValueItem = templateItemString;
+            }
+            finalXmlMassiveString = finalXmlMassiveString.replace(
+              "@data",
+              finalMassiveXml.join("")
+            );
+            await writeFile(answers.destinationFile, finalXmlMassiveString);
+            console.log(`${"Proceso realizado satisfactoriamente \n"}`);
+            stateProccess.innerText="Proceso realizado con éxito";
+          } catch (error) {
+            console.log(`${"Hubo un error en el proceso \n"}`, error.message);
+
+            stateProccess.innerText ="ERROR";
+
+          }
+          setTimeout(() => {
+            console.log("Gracias por utilizar esta herramienta!, Hasta pronto.");
+          }, 5000);
+      }
+    </script>
+  </body>
+</html>

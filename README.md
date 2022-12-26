@@ -1,12 +1,44 @@
+# EXCEL TO XML CONVERTER
+Converts the data from an EXCEL type file to an XML type file.
 
-## Steps
-- npm install
-- npx electron-forge import
-- npm run make
+![Excel to XML - USIL](https://www.ilovefreesoftware.com/wp-content/uploads/2018/01/Excel-to-XML-Converter-Software-for-Windows.png "Excel to XML - USIL")
 
-### Exe location
+## Requirements
+- Node.js > 14.*
 
-``` ./out/make/*.exe```
+## Settings
+<table>
+  <thead>
+  <td>Variable name</td>
+  <td>Description</td>
+  </thead>
+  <tbody>
+    <td>
+      NODE_ENV
+    </td> 
+    <td>
+      Variable to know the way in which the application is being used, production or development.  (producction | development)
+    </td>
+  </tbody>
+</table>
+
+## For developers
+
+- install dependencies
+  ``` npm install ```
+- Detect the operating system of your machine and possible versions for packaging
+  ```npx electron-forge import```
+- Packaging your app
+  ```npm run make```
+
+  ### Location of your executable
+  inside your app
+  ```./out/make/*.exe```
+
+# Usage
+  - Hello word on window
+    ```https://github.com/usil/excel-to-xml-converter/wiki/Hello-world-on-Window```
+    
 
 ## Contributors
 <table>
